@@ -1,0 +1,37 @@
+{
+  "name": "mow-shape-uploader",
+  "version": "0.0.1",
+  "main": "app.js",
+  "scripts": {
+    "lint:js": "eslint .",
+    "lint:js:fix": "eslint . --fix",
+    "lint:types": "tsc && tsc-strict"
+  },
+  "author": "redpencil.io",
+  "license": "MIT",
+  "description": "mu-semtech service to upload batch tribont shapes from a csv",
+  "devDependencies": {
+    "@babel/plugin-proposal-decorators": "^7.27.1",
+    "@eslint/js": "^9.16.0",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.11.0",
+    "@types/uuid": "^10.0.0",
+    "babel-plugin-add-import-extension": "^1.6.0",
+    "eslint": "^9.16.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-mocha": "^10.5.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "globals": "^15.13.0",
+    "mocha": "^11.0.1",
+    "n3": "^1.10.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.7.2",
+    "typescript-strict-plugin": "^2.4.4"
+  },
+  "dependencies": {
+    "csv-parse": "^5.6.0",
+    "csv-stringify": "^6.5.2",
+    "true-myth": "^8.6.0",
+    "uuid": "^11.1.0"
+  }
+}

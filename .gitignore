@@ -1,0 +1,8 @@
+.idea
+node_modules
+.vscode
+successlog
+errorlog
+invalid.csv
+valid.csv
+commands.http
