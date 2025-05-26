@@ -9,7 +9,8 @@ import { parseShape, type Shape } from './src/shape-parser';
 import { CSVSign } from './src/csv-parser';
 import { ParseErr } from './src/parse-err';
 import { Sign } from './src/sign';
-import { updateSign } from './src/save-shapes';
+import { makeSignMigration, updateSign } from './src/save-shapes';
+import { cleanPoison, markProblemFiles } from './src/list-gn-problems';
 
 async function findSign(code: string): Promise<Result<string, ParseErr>> {
   const q = `
@@ -53,7 +54,7 @@ app.get('/hello', async function (req, res) {
     if (isOk(sign)) {
       valid.push(record);
 
-      const updateResult = await updateSign(sign.value);
+      const updateResult = makeSignMigration(sign.value, '/app/migrations');
 
       if (isOk(updateResult)) {
         successLog.push(`Succesfully updated ${sign.value.code}`);
@@ -93,4 +94,13 @@ app.get('/hello', async function (req, res) {
   writeFileSync('/app/errorlog', errorLog.join('\n'), 'utf8');
 
   res.send(first);
+});
+
+app.post('/mark-poisoned', async function (req, res) {
+  await markProblemFiles();
+  res.status(200).send('hello from /list');
+});
+app.post('/clean-poison', async function (req, res) {
+  await cleanPoison();
+  res.status(200).send('poisoned status deleted');
 });
