@@ -6,3 +6,5 @@ errorlog
 invalid.csv
 valid.csv
 commands.http
+cascadelog
+_sparql_tests

@@ -33,7 +33,6 @@ async function getPublishedResourceData(prUri: string): PublishedResource {
   SELECT * WHERE {
     ${pr} ?p ?v.
   }`;
-
 }
 
 async function getAllPublishedResources(
@@ -62,6 +61,18 @@ function makeDeleteMigration(publishedResource: PublishedResource): string {
   }
   `;
   return queryStr;
+}
+function deleteMeeting(meetingUri: string): string {
+  const queryStr = `
+  CONSTRUCT {} WHERE
+  {
+
+
+
+  }
+
+  `;
+  return queryStr
 }
 
 async function makeInsertMigration(

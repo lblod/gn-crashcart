@@ -11,6 +11,7 @@ import { ParseErr } from './src/parse-err';
 import { Sign } from './src/sign';
 import { makeSignMigration, updateSign } from './src/save-shapes';
 import { cleanPoison, markProblemFiles } from './src/list-gn-problems';
+import { doCascade } from './src/cascader';
 
 async function findSign(code: string): Promise<Result<string, ParseErr>> {
   const q = `
@@ -103,4 +104,9 @@ app.post('/mark-poisoned', async function (req, res) {
 app.post('/clean-poison', async function (req, res) {
   await cleanPoison();
   res.status(200).send('poisoned status deleted');
+});
+app.post('/cascade-zitting/:uuid', async function (req, res) {
+  const log = await doCascade(req.params.uuid);
+  writeFileSync('/app/cascadelog', log.join('\n'), 'utf8');
+  res.status(200).send('cascading complete');
 });
