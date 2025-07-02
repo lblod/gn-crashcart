@@ -15,7 +15,6 @@ function artikel() {
     rels: [rel(besluit, 'eli:has_part', { inverse: true })],
   });
 }
-// done
 function besluit() {
   return constraint({
     name: 'Besluit',
@@ -31,7 +30,6 @@ function stemming() {
   });
 }
 
-// done
 function behandeling() {
   return constraint({
     name: 'BehandelingVanAgendapunt',
@@ -42,7 +40,6 @@ function behandeling() {
     ],
   });
 }
-// done
 function versionedNotulen() {
   return constraint({
     name: 'VersionedNotulen',
@@ -54,7 +51,6 @@ function versionedNotulen() {
   });
 }
 
-// done
 const versionedBehandeling = () =>
   constraint({
     name: 'VersionedBehandeling',
@@ -62,14 +58,12 @@ const versionedBehandeling = () =>
     rels: [rel(behandeling, 'ext:behandeling')],
   });
 
-//done
 const versionedBesluitenLijst = () =>
   constraint({
     name: 'VersionedBesluitenLijst',
     resType: 'ext:VersionedBesluitenLijst',
   });
 
-// done - reached by inversion from publishedResource
 function task() {
   return constraint({
     name: 'Task',
@@ -90,7 +84,6 @@ function attachment() {
     rels: [rel(fileDataObject, 'ext:hasFile')],
   });
 }
-//done
 function publishedResource() {
   return constraint({
     name: 'PublishedResource',
@@ -115,7 +108,6 @@ function publishedResource() {
     ],
   });
 }
-//done
 function agendapunt() {
   return constraint({
     name: 'Agendapunt',
@@ -123,7 +115,6 @@ function agendapunt() {
     rels: [rel(behandeling, 'dct:subject', { inverse: true })],
   });
 }
-//done
 function agenda() {
   return constraint({
     name: 'Agenda',
@@ -135,7 +126,6 @@ function agenda() {
   });
 }
 
-//done
 function notulen() {
   return constraint({
     name: 'Notulen',
@@ -146,7 +136,6 @@ function notulen() {
     ],
   });
 }
-//done
 function besluitenLijst() {
   return constraint({
     name: 'Besluitenlijst',
@@ -157,7 +146,6 @@ function besluitenLijst() {
     ],
   });
 }
-// done
 function uittreksel() {
   return constraint({
     name: 'Uittreksel',
@@ -168,7 +156,6 @@ function uittreksel() {
     ],
   });
 }
-//done
 function zitting() {
   return constraint({
     name: 'Zitting',

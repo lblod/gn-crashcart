@@ -12,7 +12,7 @@ export type CascadeVisitor<R> = (
 ) => Promise<R>;
 
 export interface CascadeOpts {
-  logEmptyChildren: boolean;
+  logEmptyRelationships: boolean;
   checkForRelationshipsWithoutType: boolean;
 }
 
@@ -52,28 +52,28 @@ async function cascade<R>(
   log.push(message1);
   if (config.rels) {
     for (const deferredConfig of config.rels) {
-      const childConfig = deferredConfig.ctor()(deferredConfig.pred, {
+      const relConfig = deferredConfig.ctor()(deferredConfig.pred, {
         constrainType: deferredConfig.constrainType,
         inverse: deferredConfig.inverse,
       });
       let addNewline = false;
-      visitedConfigs.add(childConfig.name);
-      const childInstances = await findChildren(root, childConfig);
+      visitedConfigs.add(relConfig.name);
+      const relInstances = await findRelationships(root, relConfig);
       let message2 = ' '
         .repeat(indent)
         .concat(
-          `⮱ Found ${childInstances.length} children for ${renderConstraint(childConfig)}`
+          `⮱ Found ${relInstances.length} relationships for ${renderConstraint(relConfig)}`
         );
 
       // warn if there are instances which have no type belonging to the
       // predicate, this is common in production dbs which have a lot of cruft
       let unconstrained: number | null = null;
       if (
-        childConfig.resType &&
-        childConfig.pred &&
+        relConfig.resType &&
+        relConfig.pred &&
         opts.checkForRelationshipsWithoutType
       ) {
-        unconstrained = await countUnconstrained(root, childConfig);
+        unconstrained = await countUnconstrained(root, relConfig);
         if (unconstrained > 0) {
           message2 = message2.concat(
             ` WARN: also found ${unconstrained} instances without types`
@@ -81,18 +81,18 @@ async function cascade<R>(
         }
       }
       if (
-        childInstances.length > 0 ||
+        relInstances.length > 0 ||
         (unconstrained !== null && unconstrained > 0) ||
-        opts.logEmptyChildren
+        opts.logEmptyRelationships
       ) {
         log.push(message2);
         addNewline = true;
       }
-      for (const child of childInstances) {
-        if (!memory.has(child)) {
+      for (const relationship of relInstances) {
+        if (!memory.has(relationship)) {
           await cascade(
-            child,
-            childConfig,
+            relationship,
+            relConfig,
             log,
             memory,
             indent + 4,
@@ -105,7 +105,7 @@ async function cascade<R>(
           // avoid visiting the same resource twice, to stop infinite loops
           // and improve performance
           log.push(
-            ' '.repeat(indent).concat(`Already saw ${child}, skipping.`)
+            ' '.repeat(indent).concat(`Already saw ${relationship}, skipping.`)
           );
         }
       }
@@ -118,7 +118,7 @@ async function cascade<R>(
   resultCollector.push(await visitor(root, config));
 }
 
-async function findChildren(
+async function findRelationships(
   fromUri: string,
   config: CascadeConstraint
 ): Promise<string[]> {

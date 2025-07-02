@@ -2,7 +2,7 @@ import { app, query, sparqlEscapeString } from 'mu';
 import { readFile } from 'fs/promises';
 import { parse } from 'csv-parse/sync';
 import { stringify } from 'csv-stringify/sync';
-import { mkdirSync, writeFileSync } from 'fs';
+import { writeFileSync } from 'fs';
 import { Result } from 'true-myth';
 import { err, isOk, ok } from 'true-myth/result';
 import { parseShape } from './src/shape-parser';
@@ -11,14 +11,20 @@ import { ParseErr } from './src/parse-err';
 import { Sign } from './src/sign';
 import { makeSignMigration } from './src/save-shapes';
 import { cleanPoison, markProblemFiles } from './src/list-gn-problems';
-import { doCascade } from './src/cascader';
-import { collectQuads } from './src/cascade-visitors';
 import {
   publicationMeetingAllConfigs,
   publicationMeetingCascadeConfig,
 } from './src/publication-meeting-cascade';
-import { quadsToTripleString } from './src/quads-to-triplestring';
 import { getUriForUuid } from './src/get-uri-for-uuid';
+import {
+  writeCascadingDeleteMigrations,
+  writeCascadingDeleteMigrationsForResource,
+} from './src/write-cascading-delete-migrations';
+import { makeMigrationTimestamp } from './src/make-migration-timestamp';
+import {
+  gnAllConfigs,
+  gnPublishedResource,
+} from './src/gn-published-resource-cascade';
 
 async function findSign(code: string): Promise<Result<string, ParseErr>> {
   const q = `
@@ -113,40 +119,26 @@ app.post('/clean-poison', async function (req, res) {
   res.status(200).send('poisoned status deleted');
 });
 app.post('/cascade-zitting/:uuid', async function (req, res) {
-  const meetingUri = await getUriForUuid(req.params.uuid);
-  const { log, results } = await doCascade(
-    meetingUri,
-    collectQuads,
-    publicationMeetingCascadeConfig,
-    publicationMeetingAllConfigs,
-    { checkForRelationshipsWithoutType: true, logEmptyChildren: false }
-  );
-  const timestamp = new Date()
-    .toISOString()
-    .split('.')[0]
-    .replaceAll('-', '')
-    .replaceAll(':', '')
-    .replaceAll('T', '');
-
-  const migrationPath = `/app/migrations/${timestamp}-delete-meeting-${req.params.uuid}`;
-
-  mkdirSync(migrationPath, { recursive: true });
-
-  writeFileSync(`${migrationPath}/cascadelog`, log.join('\n'), 'utf8');
-
-  let i = 0;
-  for (const result of results) {
-    if (result.quads.length) {
-      writeFileSync(
-        // use uuid, otherwise use and update current no-uuid counter
-        `${migrationPath}/${timestamp}-delete-meeting-${req.params.uuid}-${result.config.name}-${result.uuid ?? `no-uuid-${i++}`}.sparql`,
-        `DELETE DATA {
-	  GRAPH <http://mu.semte.ch/graphs/public> {
-	    ${quadsToTripleString(result.quads)}
-	  }
-	}`
-      );
-    }
-  }
+  const uuid = req.params.uuid;
+  const rootUri = await getUriForUuid(uuid);
+  writeCascadingDeleteMigrationsForResource({
+    uuid,
+    rootUri,
+    rootConfig: publicationMeetingCascadeConfig,
+    allConfigs: publicationMeetingAllConfigs,
+    filenameInfix: 'meeting',
+  });
+  res.status(200).send('cascading complete');
+});
+app.post('/cascade-published-resource-gn/:uuid', async function (req, res) {
+  const uuid = req.params.uuid;
+  const rootUri = await getUriForUuid(uuid);
+  writeCascadingDeleteMigrationsForResource({
+    uuid,
+    rootUri,
+    rootConfig: gnPublishedResource,
+    allConfigs: gnAllConfigs,
+    filenameInfix: 'published-resource',
+  });
   res.status(200).send('cascading complete');
 });
