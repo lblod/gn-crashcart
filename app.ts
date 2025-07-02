@@ -2,16 +2,22 @@ import { app, query, sparqlEscapeString } from 'mu';
 import { readFile } from 'fs/promises';
 import { parse } from 'csv-parse/sync';
 import { stringify } from 'csv-stringify/sync';
-import { existsSync, mkdirSync, writeFileSync } from 'fs';
+import { mkdirSync, writeFileSync } from 'fs';
 import { Result } from 'true-myth';
 import { err, isOk, ok } from 'true-myth/result';
-import { parseShape, type Shape } from './src/shape-parser';
+import { parseShape } from './src/shape-parser';
 import { CSVSign } from './src/csv-parser';
 import { ParseErr } from './src/parse-err';
 import { Sign } from './src/sign';
-import { makeSignMigration, updateSign } from './src/save-shapes';
+import { makeSignMigration } from './src/save-shapes';
 import { cleanPoison, markProblemFiles } from './src/list-gn-problems';
-import { collectQuads, doCascade, quadsToTripleString } from './src/cascader';
+import { doCascade } from './src/cascader';
+import { collectQuads } from './src/cascade-visitors';
+import {
+  publicationMeetingAllConfigs,
+  publicationMeetingCascadeConfig,
+} from './src/publication-meeting-cascade';
+import { quadsToTripleString } from './src/quads-to-triplestring';
 
 async function findSign(code: string): Promise<Result<string, ParseErr>> {
   const q = `
@@ -106,9 +112,21 @@ app.post('/clean-poison', async function (req, res) {
   res.status(200).send('poisoned status deleted');
 });
 app.post('/cascade-zitting/:uuid', async function (req, res) {
-  const { log, results } = await doCascade(req.params.uuid, collectQuads);
+  const { log, results } = await doCascade(
+    req.params.uuid,
+    collectQuads,
+    publicationMeetingCascadeConfig,
+    publicationMeetingAllConfigs,
+    { checkForRelationshipsWithoutType: true, logEmptyChildren: false }
+  );
+  const timestamp = new Date()
+    .toISOString()
+    .split('.')[0]
+    .replaceAll('-', '')
+    .replaceAll(':', '')
+    .replaceAll('T', '');
 
-  const migrationPath = `/app/migrations/delete-meeting-${req.params.uuid}`;
+  const migrationPath = `/app/migrations/${timestamp}-delete-meeting-${req.params.uuid}`;
 
   mkdirSync(migrationPath, { recursive: true });
 
@@ -119,7 +137,7 @@ app.post('/cascade-zitting/:uuid', async function (req, res) {
     if (result.quads.length) {
       writeFileSync(
         // use uuid, otherwise use and update current no-uuid counter
-        `${migrationPath}/${result.config.name}-${result.uuid ?? `no-uuid-${i++}`}`,
+        `${migrationPath}/${timestamp}-delete-meeting-${req.params.uuid}-${result.config.name}-${result.uuid ?? `no-uuid-${i++}`}.sparql`,
         `
       DELETE DATA {
 	GRAPH <http://mu.semte.ch/graphs/public> {

@@ -1,27 +1,6 @@
 import { querySudo } from '@lblod/mu-auth-sudo';
-import { Quad_Object, Quad } from '@rdfjs/types';
-import { BindingObject, sparqlEscapeString, sparqlEscapeUri } from 'mu';
-import { DataFactory } from 'rdf-data-factory';
-import { Writer } from 'n3';
-
-const df = new DataFactory();
-
-const DO_CHECK = true;
-type PredString = `${Lowercase<string>}:${Lowercase<string>}${string}`;
-type ResString = `${Lowercase<string>}:${Capitalize<string>}`;
-interface BaseConstraint {
-  pred?: PredString;
-  inverse?: boolean;
-}
-interface DeferredConstraint extends BaseConstraint {
-  ctor: () => CascadeConstructor;
-  constrainType?: boolean;
-}
-interface CascadeConstraint extends BaseConstraint {
-  name: string;
-  rels?: DeferredConstraint[];
-  resType?: ResString;
-}
+import { sparqlEscapeString, sparqlEscapeUri } from 'mu';
+import { CascadeConstraint, renderConstraint } from './cascade-constraint';
 
 const prefixes = `
 PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
@@ -36,274 +15,12 @@ PREFIX eli: <http://data.europa.eu/eli/ontology#>
 PREFIX task: <http://redpencil.data.gift/vocabularies/tasks/>
 PREFIX nuao: <http://www.semanticdesktop.org/ontologies/2010/01/25/nuao#>
 `;
-interface CascadeConstructorOpts {
-  inverse?: boolean;
-  constrainType?: boolean;
-}
-const defaultConstructorOpts = {
-  inverse: false,
-  constrainType: true,
-} satisfies CascadeConstructorOpts;
 
-type CascadeConstructor = (
-  pred?: PredString,
-  opts?: CascadeConstructorOpts
-) => CascadeConstraint;
-
-function constraint(
-  constraint: Omit<CascadeConstraint, 'pred' | 'inverse'>
-): CascadeConstructor {
-  return function (
-    pred?: PredString,
-    {
-      inverse = false,
-      constrainType = true,
-    }: CascadeConstructorOpts = defaultConstructorOpts
-  ) {
-    return {
-      name: constraint.name,
-      rels: constraint.rels,
-      resType: constrainType ? constraint.resType : undefined,
-      pred: pred ?? undefined,
-      inverse,
-    } as CascadeConstraint;
-  };
-}
-function rel(
-  ctor: () => CascadeConstructor,
-  pred?: PredString,
-  {
-    inverse = false,
-    constrainType = true,
-  }: CascadeConstructorOpts = defaultConstructorOpts
-): DeferredConstraint {
-  return {
-    ctor,
-    pred: pred ?? undefined,
-    constrainType,
-    inverse,
-  };
+export interface CascadeOpts {
+  logEmptyChildren: boolean;
+  checkForRelationshipsWithoutType: boolean;
 }
 
-function fileDataObject() {
-  return constraint({
-    name: 'FileDataObject',
-    resType: 'nfo:FileDataObject',
-    rels: [rel(fileDataObject, 'nie:dataSource')],
-  });
-}
-
-function artikel() {
-  return constraint({
-    name: 'Artikel',
-    resType: 'besluit:Artikel',
-    rels: [rel(besluit, 'eli:has_part', { inverse: true })],
-  });
-}
-// done
-function besluit() {
-  return constraint({
-    name: 'Besluit',
-    resType: 'besluit:Besluit',
-    rels: [rel(artikel, 'eli:has_part', { constrainType: false })],
-  });
-}
-
-function stemming() {
-  return constraint({
-    name: 'Stemming',
-    resType: 'besluit:Stemming',
-  });
-}
-
-// done
-function behandeling() {
-  return constraint({
-    name: 'BehandelingVanAgendapunt',
-    resType: 'besluit:BehandelingVanAgendapunt',
-    rels: [
-      rel(besluit, 'prov:generated'),
-      rel(stemming, 'besluit:heeftStemming'),
-    ],
-  });
-}
-// done
-function versionedNotulen() {
-  return constraint({
-    name: 'VersionedNotulen',
-    resType: 'ext:VersionedNotulen',
-    rels: [
-      rel(behandeling, 'ext:publicBehandeling'),
-      rel(fileDataObject, 'prov:generated'),
-    ],
-  });
-}
-
-// done
-const versionedBehandeling = () =>
-  constraint({
-    name: 'VersionedBehandeling',
-    resType: 'ext:VersionedBehandeling',
-    rels: [rel(behandeling, 'ext:behandeling')],
-  });
-
-//done
-const versionedBesluitenLijst = () =>
-  constraint({
-    name: 'VersionedBesluitenLijst',
-    resType: 'ext:VersionedBesluitenLijst',
-  });
-
-// done - reached by inversion from publishedResource
-function task() {
-  return constraint({
-    name: 'Task',
-    resType: 'task:Task',
-  });
-}
-
-function bvAgenda() {
-  return constraint({
-    name: 'BVAgenda',
-    resType: 'bv:Agenda',
-  });
-}
-
-function attachment() {
-  return constraint({
-    name: 'Attachment',
-    rels: [rel(fileDataObject, 'ext:hasFile')],
-  });
-}
-//done
-function publishedResource() {
-  return constraint({
-    name: 'PublishedResource',
-    resType: 'sign:PublishedResource',
-    rels: [
-      rel(fileDataObject, 'prov:generated'),
-
-      rel(versionedBehandeling, 'dct:subject'),
-      rel(versionedBehandeling, 'ext:publishedBehandeling'),
-
-      rel(versionedBesluitenLijst, 'dct:subject'),
-      rel(versionedBesluitenLijst, 'ext:publishedBesluitenLijst'),
-
-      rel(bvAgenda, 'dct:subject'),
-      rel(bvAgenda, 'ext:publishedAgenda'),
-
-      rel(versionedNotulen, 'dct:subject'),
-      rel(versionedNotulen, 'ext:publishesNotulen'),
-      rel(attachment, 'ext:hasAttachment'),
-
-      rel(task, 'nuao:involves', { inverse: true }),
-    ],
-  });
-}
-//done
-function agendapunt() {
-  return constraint({
-    name: 'Agendapunt',
-    resType: 'besluit:Agendapunt',
-    rels: [rel(behandeling, 'dct:subject', { inverse: true })],
-  });
-}
-//done
-function agenda() {
-  return constraint({
-    name: 'Agenda',
-    resType: 'ext:Agenda',
-    rels: [
-      rel(agendapunt, 'ext:agendaAgendapunt'),
-      rel(publishedResource, 'ext:wasDerivedFrom'),
-    ],
-  });
-}
-
-//done
-function notulen() {
-  return constraint({
-    name: 'Notulen',
-    resType: 'ext:Notulen',
-    rels: [
-      rel(fileDataObject, 'prov:generated'),
-      rel(publishedResource, 'prov:wasDerivedFrom'),
-    ],
-  });
-}
-//done
-function besluitenLijst() {
-  return constraint({
-    name: 'Besluitenlijst',
-    resType: 'ext:Besluitenlijst',
-    rels: [
-      rel(besluit, 'ext:besluitenlijstBesluit'),
-      rel(publishedResource, 'prov:wasDerivedFrom'),
-    ],
-  });
-}
-// done
-function uittreksel() {
-  return constraint({
-    name: 'Uittreksel',
-    resType: 'ext:Uittreksel',
-    rels: [
-      rel(publishedResource, 'prov:wasDerivedFrom'),
-      rel(behandeling, 'ext:uittrekselBvap'),
-    ],
-  });
-}
-//done
-function zitting() {
-  return constraint({
-    name: 'Zitting',
-    resType: 'besluit:Zitting',
-    rels: [
-      rel(agendapunt, 'besluit:behandelt', { constrainType: false }),
-      rel(besluitenLijst, 'ext:besluitenlijst'),
-      rel(publishedResource, 'prov:wasDerivedFrom'),
-      rel(uittreksel, 'ext:uittreksel'),
-      rel(agenda, 'ext:agenda'),
-      rel(notulen, 'besluit:heeftNotulen'),
-      rel(ivNotulen, 'ext:wasDerivedFromInstallatievergaderingNotulen'),
-      rel(bvAgenda, 'bv:isAgendaVoor', { inverse: true }),
-    ],
-  });
-}
-function ivNotulen() {
-  return constraint({
-    name: 'IVNotulen',
-  });
-}
-const allConfigs = [
-  fileDataObject,
-  artikel,
-  besluit,
-  stemming,
-  behandeling,
-  versionedNotulen,
-  versionedBehandeling,
-  versionedBesluitenLijst,
-  task,
-  bvAgenda,
-  publishedResource,
-  agendapunt,
-  agenda,
-  notulen,
-  besluitenLijst,
-  uittreksel,
-  zitting,
-  ivNotulen,
-].map((f) => f()(undefined));
-const cascadeConfig = zitting()(undefined);
-
-function renderConstraint(config: CascadeConstraint): string {
-  const pred = config.pred ? `(via ${config.pred})` : `(via *)`;
-  const inv = config.inverse ? `[<-]` : `[->]`;
-  return `${config.name} of type ${config.resType ?? '*'} ${inv} ${pred}`;
-}
-
-const LOG_EMPTY_CHILDREN = false;
 async function cascade<R>(
   root: string,
   config: CascadeConstraint,
@@ -312,7 +29,8 @@ async function cascade<R>(
   indent: number,
   visitedConfigs: Set<string>,
   visitor: CascadeVisitor<R>,
-  resultCollector: R[]
+  resultCollector: R[],
+  opts: CascadeOpts
 ): Promise<void> {
   if (!config.resType && !config.pred) {
     throw new Error('Should either have type or pred constraint');
@@ -341,7 +59,11 @@ async function cascade<R>(
       // warn if there are instances which have no type belonging to the
       // predicate, this is common in production dbs which have a lot of cruft
       let unconstrained: number | null = null;
-      if (childConfig.resType && childConfig.pred && DO_CHECK) {
+      if (
+        childConfig.resType &&
+        childConfig.pred &&
+        opts.checkForRelationshipsWithoutType
+      ) {
         unconstrained = await countUnconstrained(root, childConfig);
         if (unconstrained > 0) {
           message2 = message2.concat(
@@ -352,7 +74,7 @@ async function cascade<R>(
       if (
         childInstances.length > 0 ||
         (unconstrained !== null && unconstrained > 0) ||
-        LOG_EMPTY_CHILDREN
+        opts.logEmptyChildren
       ) {
         log.push(message2);
         addNewline = true;
@@ -367,7 +89,8 @@ async function cascade<R>(
             indent + 4,
             visitedConfigs,
             visitor,
-            resultCollector
+            resultCollector,
+            opts
           );
         } else {
           // avoid visiting the same resource twice, to stop infinite loops
@@ -451,14 +174,20 @@ async function getUriForUuid(uuid: string): Promise<string> {
   }
   return result.results.bindings[0].uri.value;
 }
-interface CascadeResult<R> {
+export interface CascadeResult<R> {
   results: R[];
   log: string[];
 }
-type CascadeVisitor<R> = (uri: string, config: CascadeConstraint) => Promise<R>;
+export type CascadeVisitor<R> = (
+  uri: string,
+  config: CascadeConstraint
+) => Promise<R>;
 export async function doCascade<R>(
   rootUuid: string,
-  visitFunc: CascadeVisitor<R>
+  visitFunc: CascadeVisitor<R>,
+  rootConfig: CascadeConstraint,
+  allConfigs: CascadeConstraint[],
+  opts: CascadeOpts
 ): Promise<CascadeResult<R>> {
   const log: string[] = [];
 
@@ -467,13 +196,14 @@ export async function doCascade<R>(
   const results: R[] = [];
   await cascade(
     uri,
-    cascadeConfig,
+    rootConfig,
     log,
     new Set(),
     0,
     visitedConfigs,
     visitFunc,
-    results
+    results,
+    opts
   );
 
   log.push(`visited configs:  ${[...visitedConfigs].join(',')}`);
@@ -488,95 +218,4 @@ export async function doCascade<R>(
   }
 
   return { log, results };
-}
-export async function collectQuads(
-  resource: string,
-  config: CascadeConstraint
-): Promise<{ config: CascadeConstraint; quads: Quad[]; uuid?: string }> {
-  const uri = sparqlEscapeUri(resource);
-  const outgoingQuery = `
-  SELECT ?g ?s ?p ?v WHERE {
-    VALUES ?s { ${uri} }
-      GRAPH ?g {
-      ?s ?p ?v.
-      }
-  } `;
-  const outgoingResults = await querySudo<{
-    g: string;
-    s: string;
-    p: string;
-    v: string;
-  }>(outgoingQuery);
-  const outQuads = outgoingResults.results.bindings.map(bindingToQuad);
-
-  const incomingQuery = `
-  SELECT ?g ?s ?p ?v WHERE {
-    VALUES ?v { ${uri} }
-      GRAPH ?g {
-      ?s ?p ?v.
-      }
-  } `;
-  const incomingResults = await querySudo<{
-    g: string;
-    s: string;
-    p: string;
-    v: string;
-  }>(incomingQuery);
-  const inQuads = incomingResults.results.bindings.map(bindingToQuad);
-  const uuidQuad = outQuads.find((quad) => {
-    return quad.predicate.equals(
-      df.namedNode('http://mu.semte.ch/vocabularies/core/uuid')
-    );
-  });
-  return {
-    config,
-    quads: outQuads.concat(inQuads),
-    uuid: uuidQuad?.object.value,
-  };
-}
-export function bindingToQuad(
-  binding: BindingObject<{ g: string; s: string; p: string; v: string }>
-) {
-  const { g, s, p, v } = binding;
-  let object: Quad_Object;
-  switch (v.type) {
-    case 'uri':
-      object = df.namedNode(v.value);
-      break;
-
-    case 'literal':
-      console.log(JSON.stringify(v), undefined, 2);
-
-      object = df.literal(v.value);
-      break;
-    case 'typed-literal':
-      if ((v as any)['language']) {
-        throw new Error(`saw language in ${(JSON.stringify(v), null, 2)}`);
-      }
-      object = df.literal(
-        v.value,
-        df.namedNode((v as any)['datatype'] as string)
-      );
-      break;
-
-    default:
-      throw new Error(
-        `unknown type ${v.type} -- ${v.value} -- ${JSON.stringify(v)}`
-      );
-  }
-  const quad = df.quad(
-    df.namedNode(s.value),
-    df.namedNode(p.value),
-    object,
-    df.namedNode(g.value)
-  );
-  return quad;
-}
-
-export function quadsToTripleString(quads: Quad[]) {
-  const writer = new Writer({ format: 'N-Triples' });
-  let resultString: string;
-  writer.addQuads(quads.map((q) => df.quad(q.subject, q.predicate, q.object)));
-  writer.end((_, result) => (resultString = result));
-  return resultString!;
 }
