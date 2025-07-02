@@ -5,6 +5,7 @@ successlog
 errorlog
 invalid.csv
 valid.csv
+migrations
 commands.http
 cascadelog
 _sparql_tests
