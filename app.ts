@@ -18,6 +18,7 @@ import {
   publicationMeetingCascadeConfig,
 } from './src/publication-meeting-cascade';
 import { quadsToTripleString } from './src/quads-to-triplestring';
+import { getUriForUuid } from './src/get-uri-for-uuid';
 
 async function findSign(code: string): Promise<Result<string, ParseErr>> {
   const q = `
@@ -112,8 +113,9 @@ app.post('/clean-poison', async function (req, res) {
   res.status(200).send('poisoned status deleted');
 });
 app.post('/cascade-zitting/:uuid', async function (req, res) {
+  const meetingUri = await getUriForUuid(req.params.uuid);
   const { log, results } = await doCascade(
-    req.params.uuid,
+    meetingUri,
     collectQuads,
     publicationMeetingCascadeConfig,
     publicationMeetingAllConfigs,
@@ -138,13 +140,11 @@ app.post('/cascade-zitting/:uuid', async function (req, res) {
       writeFileSync(
         // use uuid, otherwise use and update current no-uuid counter
         `${migrationPath}/${timestamp}-delete-meeting-${req.params.uuid}-${result.config.name}-${result.uuid ?? `no-uuid-${i++}`}.sparql`,
-        `
-      DELETE DATA {
-	GRAPH <http://mu.semte.ch/graphs/public> {
-	  ${quadsToTripleString(result.quads)}
-	}
-      }
-      `
+        `DELETE DATA {
+	  GRAPH <http://mu.semte.ch/graphs/public> {
+	    ${quadsToTripleString(result.quads)}
+	  }
+	}`
       );
     }
   }

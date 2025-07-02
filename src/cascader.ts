@@ -1,6 +1,20 @@
 import { querySudo } from '@lblod/mu-auth-sudo';
-import { sparqlEscapeString, sparqlEscapeUri } from 'mu';
+import { sparqlEscapeUri } from 'mu';
 import { CascadeConstraint, renderConstraint } from './cascade-constraint';
+
+export interface CascadeResult<R> {
+  results: R[];
+  log: string[];
+}
+export type CascadeVisitor<R> = (
+  uri: string,
+  config: CascadeConstraint
+) => Promise<R>;
+
+export interface CascadeOpts {
+  logEmptyChildren: boolean;
+  checkForRelationshipsWithoutType: boolean;
+}
 
 const prefixes = `
 PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
@@ -15,11 +29,6 @@ PREFIX eli: <http://data.europa.eu/eli/ontology#>
 PREFIX task: <http://redpencil.data.gift/vocabularies/tasks/>
 PREFIX nuao: <http://www.semanticdesktop.org/ontologies/2010/01/25/nuao#>
 `;
-
-export interface CascadeOpts {
-  logEmptyChildren: boolean;
-  checkForRelationshipsWithoutType: boolean;
-}
 
 async function cascade<R>(
   root: string,
@@ -162,28 +171,8 @@ async function countUnconstrained(
   const result = await querySudo<{ targetCount: string }>(q);
   return Number.parseInt(result.results.bindings[0].targetCount.value, 10);
 }
-async function getUriForUuid(uuid: string): Promise<string> {
-  const query = `
-  PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
-  SELECT DISTINCT ?uri WHERE {
-    ?uri mu:uuid ${sparqlEscapeString(uuid)}
-  }`;
-  const result = await querySudo<{ uri: string }>(query);
-  if (result.results.bindings.length === 0) {
-    throw new Error(`Resource with uuid ${uuid} not found`);
-  }
-  return result.results.bindings[0].uri.value;
-}
-export interface CascadeResult<R> {
-  results: R[];
-  log: string[];
-}
-export type CascadeVisitor<R> = (
-  uri: string,
-  config: CascadeConstraint
-) => Promise<R>;
 export async function doCascade<R>(
-  rootUuid: string,
+  rootUri: string,
   visitFunc: CascadeVisitor<R>,
   rootConfig: CascadeConstraint,
   allConfigs: CascadeConstraint[],
@@ -191,7 +180,7 @@ export async function doCascade<R>(
 ): Promise<CascadeResult<R>> {
   const log: string[] = [];
 
-  const uri = await getUriForUuid(rootUuid);
+  const uri = rootUri;
   const visitedConfigs = new Set<string>();
   const results: R[] = [];
   await cascade(
