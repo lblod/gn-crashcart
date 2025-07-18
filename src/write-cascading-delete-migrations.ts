@@ -14,6 +14,7 @@ export interface CascadingDeleteOpts {
   allConfigs: CascadeConstraint[];
   opts: CascadeOpts;
   outputDir: string;
+  deleteOrInsert?: 'DELETE' | 'INSERT';
   filenameGenerator: (
     result: Awaited<ReturnType<typeof collectQuads>>,
     index: number
@@ -25,6 +26,7 @@ export async function writeCascadingDeleteMigrations({
   opts,
   allConfigs,
   outputDir,
+  deleteOrInsert = 'DELETE',
   filenameGenerator,
 }: CascadingDeleteOpts) {
   const { log, results } = await doCascade(
@@ -48,7 +50,7 @@ export async function writeCascadingDeleteMigrations({
       }
       for (const [graph, quads] of graphs.entries()) {
         queries.push(`
-	DELETE DATA {
+	${deleteOrInsert} DATA {
 	  GRAPH ${sparqlEscapeUri(graph)} {
 	    ${quadsToTripleString(quads)}
 	  }

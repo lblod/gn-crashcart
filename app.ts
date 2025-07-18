@@ -25,6 +25,13 @@ import {
   gnAllConfigs,
   gnPublishedResource,
 } from './src/gn-published-resource-cascade';
+import {
+  executeDeletes,
+  repairMeetingPublications,
+  republishAllPrsOfMeeting,
+} from './src/repair-meeting-publications';
+import bodyParser from 'body-parser';
+app.use(bodyParser.json());
 
 async function findSign(code: string): Promise<Result<string, ParseErr>> {
   const q = `
@@ -121,7 +128,7 @@ app.post('/clean-poison', async function (req, res) {
 app.post('/cascade-zitting/:uuid', async function (req, res) {
   const uuid = req.params.uuid;
   const rootUri = await getUriForUuid(uuid);
-  writeCascadingDeleteMigrationsForResource({
+  await writeCascadingDeleteMigrationsForResource({
     uuid,
     rootUri,
     rootConfig: publicationMeetingCascadeConfig,
@@ -133,7 +140,7 @@ app.post('/cascade-zitting/:uuid', async function (req, res) {
 app.post('/cascade-published-resource-gn/:uuid', async function (req, res) {
   const uuid = req.params.uuid;
   const rootUri = await getUriForUuid(uuid);
-  writeCascadingDeleteMigrationsForResource({
+  await writeCascadingDeleteMigrationsForResource({
     uuid,
     rootUri,
     rootConfig: gnPublishedResource,
@@ -142,3 +149,26 @@ app.post('/cascade-published-resource-gn/:uuid', async function (req, res) {
   });
   res.status(200).send('cascading complete');
 });
+app.post('/gn-clear-publications/:meetingUuid', async function (req, res) {
+  await repairMeetingPublications(req.params.meetingUuid);
+  res.status(200).send('meeting repaired');
+});
+
+app.post('/republish/:meetingUuid', async function (req, res) {
+  await republishAllPrsOfMeeting(
+    req.params.meetingUuid,
+    splitarray(req.rawHeaders)
+  );
+
+  res.status(200).send('session tested');
+});
+
+function splitarray<A>(input: Array<A>): Array<[A, A]> {
+  const output: Array<[A, A]> = [];
+
+  for (var i = 0; i < input.length; i += 2) {
+    output[output.length] = input.slice(i, i + 2) as [A, A];
+  }
+
+  return output;
+}

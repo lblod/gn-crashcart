@@ -1,0 +1,19 @@
+PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
+PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
+
+SELECT DISTINCT * WHERE {
+
+  ?zitting a besluit:Zitting.
+
+
+  ?zitting ?zfile ?file.
+
+  ?zitting ?zown ?thinga.
+
+  ?thinga ?afile ?file.
+  ?thinga ?aown ?thingb.
+  ?thingb ?bfile ?file.
+
+  ?file a nfo:FileDataObject .
+
+}

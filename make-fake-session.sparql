@@ -1,0 +1,20 @@
+PREFIX sign: <http://mu.semte.ch/vocabularies/ext/signing/>
+PREFIX muSession: <http://mu.semte.ch/vocabularies/session/>
+PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+
+INSERT {
+  GRAPH <http://mu.semte.ch/graphs/sessions> {
+    <http://mu.semte.ch/sessions/fakesession> mu:uuid "fakesession" .
+    <http://mu.semte.ch/sessions/fakesession> muSession:account ?account .
+    <http://mu.semte.ch/sessions/fakesession> ext:sessionRole ?role .
+    <http://mu.semte.ch/sessions/fakesession> ext:fakeSession "yes" .
+  }
+}
+WHERE {
+  <http://data.lblod.info/published-resources/8bd6b3f0-00c0-11f0-95ce-b9aa226d652f> sign:signatory ?signPerson ;
+                                                                                    sign:signatorySecret ?secret ;
+                                                                                    sign:signatoryRoles ?role .
+  ?signPerson foaf:account ?account .
+}

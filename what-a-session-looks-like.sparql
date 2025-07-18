@@ -1,0 +1,10 @@
+PREFIX muSession: <http://mu.semte.ch/vocabularies/session/>
+
+SELECT DISTINCT ?p (GROUP_CONCAT(?type; SEPARATOR = ";") as ?types) WHERE {
+  ?z muSession:account ?o.
+  ?z ?p ?o.
+  OPTIONAL {
+    ?o a ?type.
+  }
+
+} GROUP BY ?p

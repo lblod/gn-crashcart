@@ -1,0 +1,15 @@
+PREFIX nfo: <http://www.semanticdesktop.org/ontologies/2007/03/22/nfo#>
+
+SELECT DISTINCT ?thingType ?outThingType
+WHERE {
+  ?file a nfo:FileDataObject .
+  {
+    ?thing a ?thingType .
+    ?thing ?foo ?file .
+  }
+  UNION
+  {
+    ?file ?foo ?thing .
+    ?thing a ?outThingType.
+  }
+}
