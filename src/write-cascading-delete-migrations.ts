@@ -20,7 +20,7 @@ export interface CascadingDeleteOpts {
     index: number
   ) => string;
 }
-export async function writeCascadingDeleteMigrations({
+export async function writeCascadingMigrations({
   rootConfig,
   rootUri,
   opts,
@@ -77,7 +77,7 @@ export async function writeCascadingDeleteMigrationsForResource({
   const timestamp = makeMigrationTimestamp(new Date());
   const migrationPath = `/app/migrations/${timestamp}-delete-${filenameInfix}-${uuid}`;
 
-  writeCascadingDeleteMigrations({
+  writeCascadingMigrations({
     allConfigs,
     filenameGenerator: (result, index) =>
       `${timestamp}-delete-${filenameInfix}-${uuid}-${result.config.name}-${result.uuid ?? `no-uuid-${index}`}.sparql`,

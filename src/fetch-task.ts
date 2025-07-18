@@ -72,6 +72,7 @@ export async function fetchTaskifiedEndpoint(
   const res = await fetch(url, fetchOptions);
   if (res.ok) {
     const json = await res.json();
+    console.log('json task data', json.data)
     return json.data.id;
   } else {
     throw new Error(await res.text());

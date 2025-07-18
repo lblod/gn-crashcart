@@ -1,36 +1,29 @@
-import { app, query, sparqlEscapeString } from 'mu';
-import { readFile } from 'fs/promises';
+import bodyParser from 'body-parser';
 import { parse } from 'csv-parse/sync';
 import { stringify } from 'csv-stringify/sync';
 import { writeFileSync } from 'fs';
+import { readFile } from 'fs/promises';
+import { app, query, sparqlEscapeString } from 'mu';
 import { Result } from 'true-myth';
 import { err, isOk, ok } from 'true-myth/result';
-import { parseShape } from './src/shape-parser';
 import { CSVSign } from './src/csv-parser';
-import { ParseErr } from './src/parse-err';
-import { Sign } from './src/sign';
-import { makeSignMigration } from './src/save-shapes';
-import { cleanPoison, markProblemFiles } from './src/list-gn-problems';
-import {
-  publicationMeetingAllConfigs,
-  publicationMeetingCascadeConfig,
-} from './src/publication-meeting-cascade';
 import { getUriForUuid } from './src/get-uri-for-uuid';
-import {
-  writeCascadingDeleteMigrations,
-  writeCascadingDeleteMigrationsForResource,
-} from './src/write-cascading-delete-migrations';
-import { makeMigrationTimestamp } from './src/make-migration-timestamp';
 import {
   gnAllConfigs,
   gnPublishedResource,
 } from './src/gn-published-resource-cascade';
+import { cleanPoison, markProblemFiles } from './src/list-gn-problems';
+import { ParseErr } from './src/parse-err';
 import {
-  executeDeletes,
-  repairMeetingPublications,
-  republishAllPrsOfMeeting,
-} from './src/repair-meeting-publications';
-import bodyParser from 'body-parser';
+  publicationMeetingAllConfigs,
+  publicationMeetingCascadeConfig,
+} from './src/publication-meeting-cascade';
+import { removePublishedResourcesOfMeeting } from './src/republication/remove-prs-of-meeting';
+import { republishAllPrsOfMeeting } from './src/republication/republish-prs-of-meeting';
+import { makeSignMigration } from './src/save-shapes';
+import { parseShape } from './src/shape-parser';
+import { Sign } from './src/sign';
+import { writeCascadingDeleteMigrationsForResource } from './src/write-cascading-delete-migrations';
 app.use(bodyParser.json());
 
 async function findSign(code: string): Promise<Result<string, ParseErr>> {
@@ -150,7 +143,7 @@ app.post('/cascade-published-resource-gn/:uuid', async function (req, res) {
   res.status(200).send('cascading complete');
 });
 app.post('/gn-clear-publications/:meetingUuid', async function (req, res) {
-  await repairMeetingPublications(req.params.meetingUuid);
+  await removePublishedResourcesOfMeeting(req.params.meetingUuid);
   res.status(200).send('meeting repaired');
 });
 
