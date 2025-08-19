@@ -51,6 +51,66 @@ export async function collectQuads(
     uuid: uuidQuad?.object.value,
   };
 }
+
+export async function collectPublicationZittingQuads(
+  resource: string,
+  config: CascadeConstraint
+): Promise<{ config: CascadeConstraint; quads: Quad[]; uuid?: string }> {
+  const uri = sparqlEscapeUri(resource);
+  let outgoingQuery;
+  if (['Zitting', 'Uittreksel', 'BVAgenda', 'Agenda'].includes(config.name)) {
+    outgoingQuery = `
+  PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+  SELECT ?g ?s ?p ?v WHERE {
+    VALUES ?s { ${uri} }
+      GRAPH ?g {
+      ?s ?p ?v.
+      FILTER( ?p != mu:uuid)
+      }
+  } `;
+  } else {
+    outgoingQuery = `
+  SELECT ?g ?s ?p ?v WHERE {
+    VALUES ?s { ${uri} }
+      GRAPH ?g {
+      ?s ?p ?v.
+      }
+  } `;
+  }
+  const outgoingResults = await querySudo<{
+    g: string;
+    s: string;
+    p: string;
+    v: string;
+  }>(outgoingQuery);
+  const outQuads = outgoingResults.results.bindings.map(bindingToQuad);
+
+  const incomingQuery = `
+  SELECT ?g ?s ?p ?v WHERE {
+    VALUES ?v { ${uri} }
+      GRAPH ?g {
+      ?s ?p ?v.
+      }
+  } `;
+  const incomingResults = await querySudo<{
+    g: string;
+    s: string;
+    p: string;
+    v: string;
+  }>(incomingQuery);
+  const inQuads = incomingResults.results.bindings.map(bindingToQuad);
+  const uuidQuad = outQuads.find((quad) => {
+    return quad.predicate.equals(
+      df.namedNode('http://mu.semte.ch/vocabularies/core/uuid')
+    );
+  });
+  return {
+    config,
+    quads: outQuads.concat(inQuads),
+    uuid: uuidQuad?.object.value,
+  };
+}
+
 function bindingToQuad(
   binding: BindingObject<{ g: string; s: string; p: string; v: string }>
 ) {

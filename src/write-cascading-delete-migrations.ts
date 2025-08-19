@@ -1,12 +1,16 @@
 import { mkdirSync, writeFileSync } from 'fs';
 import { CascadeConstraint } from './cascade-constraint';
-import { collectQuads } from './cascade-visitors';
+import {
+  collectPublicationZittingQuads,
+  collectQuads,
+} from './cascade-visitors';
 import { CascadeOpts, doCascade } from './cascader';
 import { quadsToTripleString } from './quads-to-triplestring';
 import { makeMigrationTimestamp } from './make-migration-timestamp';
 import { Quad } from '@rdfjs/types';
 import { sparqlEscapeUri } from 'mu';
 import { setOrPush } from './map-utils';
+import { splitArray } from './array-utils';
 
 export interface CascadingDeleteOpts {
   rootUri: string;
@@ -31,7 +35,7 @@ export async function writeCascadingMigrations({
 }: CascadingDeleteOpts) {
   const { log, results } = await doCascade(
     rootUri,
-    collectQuads,
+    collectPublicationZittingQuads,
     rootConfig,
     allConfigs,
     opts
@@ -43,18 +47,21 @@ export async function writeCascadingMigrations({
 
   for (const [index, result] of results.entries()) {
     if (result.quads.length) {
-      const graphs = new Map<string, Quad[]>();
+      const partitionedQuads = splitArray(result.quads, 50);
       const queries: string[] = [];
-      for (const quad of result.quads) {
-        setOrPush(graphs, quad.graph.value, quad);
-      }
-      for (const [graph, quads] of graphs.entries()) {
-        queries.push(`
+      for (const quadBatch of partitionedQuads) {
+        const graphs = new Map<string, Quad[]>();
+        for (const quad of quadBatch) {
+          setOrPush(graphs, quad.graph.value, quad);
+        }
+        for (const [graph, quads] of graphs.entries()) {
+          queries.push(`
 	${deleteOrInsert} DATA {
 	  GRAPH ${sparqlEscapeUri(graph)} {
 	    ${quadsToTripleString(quads)}
 	  }
 	}`);
+        }
       }
 
       writeFileSync(
@@ -81,7 +88,10 @@ export async function writeCascadingDeleteMigrationsForResource({
     allConfigs,
     filenameGenerator: (result, index) =>
       `${timestamp}-delete-${filenameInfix}-${uuid}-${result.config.name}-${result.uuid ?? `no-uuid-${index}`}.sparql`,
-    opts: { checkForRelationshipsWithoutType: true, logEmptyRelationships: false },
+    opts: {
+      checkForRelationshipsWithoutType: true,
+      logEmptyRelationships: false,
+    },
     outputDir: migrationPath,
     rootUri,
     rootConfig,

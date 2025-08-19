@@ -1,0 +1,12 @@
+PREFIX dct: <http://purl.org/dc/terms/>
+PREFIX mobiliteit: <https://data.vlaanderen.be/ns/mobiliteit#>
+
+SELECT DISTINCT ?varLabel
+WHERE {
+  ?var a <http://lblod.data.gift/vocabularies/variables/Variable> ;
+       dct:type "instruction" ;
+       dct:title ?varLabel .
+  FILTER NOT EXISTS {
+    ?var mobiliteit:template ?template .
+  }
+}

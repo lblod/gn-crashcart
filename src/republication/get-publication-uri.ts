@@ -48,7 +48,10 @@ export async function getPublicationUri(
     agendaType: string;
     behandelingUuid: string;
   }>(queryString);
-  const publicationType = result.results.bindings[0].type.value;
+  const publicationType = result.results.bindings[0]?.type?.value;
+  if (!publicationType) {
+    throw new Error(`did not find a publicationType for ${publishedResource}`);
+  }
   const typeLabel = typeMap[publicationType];
   switch (typeLabel) {
     case 'besluitenlijst':

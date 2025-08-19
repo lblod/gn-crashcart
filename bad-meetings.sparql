@@ -1,0 +1,63 @@
+PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
+PREFIX prov: <http://www.w3.org/ns/prov#>
+PREFIX bv: <http://data.vlaanderen.be/ns/besluitvorming#>
+PREFIX sign: <http://mu.semte.ch/vocabularies/ext/signing/>
+PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+
+SELECT DISTINCT ?meeting ?clicklink ?uuid
+WHERE {
+  ?meeting a besluit:Zitting .
+  ?meeting mu:uuid ?uuid .
+  OPTIONAL {
+    ?meeting foaf:page ?page .
+    BIND (URI(CONCAT('http://publi-prod.localhost', ?page)) AS ?clicklink)
+  }
+  {
+    ?meeting prov:wasDerivedFrom ?pr .
+  }
+  UNION
+  {
+    ?meeting ext:uittreksel ?uittreksel .
+    ?uittreksel prov:wasDerivedFrom ?pr .
+  }
+  UNION
+  {
+    ?meeting ext:besluitenlijst ?besluitenlijst .
+    ?besluitenlijst prov:wasDerivedFrom ?pr .
+  }
+  UNION
+  {
+    ?meeting besluit:heeftNotulen ?notulen .
+    ?notulen prov:wasDerivedFrom ?pr .
+  }
+  UNION
+  {
+    ?meeting ext:agenda ?agenda .
+    ?agenda prov:wasDerivedFrom ?pr .
+  }
+  UNION
+  {
+    ?agenda bv:isAgendaVoor ?meeting .
+    ?pr ext:publishesAgenda ?agenda .
+  }
+  ?pr a sign:PublishedResource .
+  {
+    ?pr sign:text ?text .
+    FILTER (CONTAINS("--ref-uuid", ?text))
+  }
+  UNION
+  {
+    ?pr prov:generated ?fdo .
+    {
+      ?fdo ext:poisoned "yes" .
+    }
+    UNION
+    {
+      ?phys ?p ?fdo .
+      ?phys ext:poisoned "yes" .
+    }
+  }
+}
+ORDER BY ?page

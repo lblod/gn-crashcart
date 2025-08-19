@@ -9,3 +9,4 @@ migrations
 commands.http
 cascadelog
 _sparql_tests
+republication-output

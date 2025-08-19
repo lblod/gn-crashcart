@@ -1,9 +1,21 @@
 PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
-SELECT DISTINCT ?p (GROUP_CONCAT(?type; SEPARATOR = ";") as ?types) WHERE {
-  ?z a besluit:Zitting.
-  ?z ?p ?o.
-  OPTIONAL {
-    ?o a ?type.
-  }
+PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
 
-} GROUP BY ?p
+SELECT DISTINCT ?dir ?p (GROUP_CONCAT(DISTINCT ?type; SEPARATOR = ";") AS ?types)
+WHERE {
+  ?z a besluit:Zitting .
+  {
+    ?z ?p ?o .
+    VALUES ?dir { "out" }
+  }
+  UNION
+  {
+    ?o ?p ?z .
+    VALUES ?dir { "in" }
+  }
+  OPTIONAL {
+    ?o a ?type .
+  }
+}
+GROUP BY ?p ?dir
+ORDER BY ASC(?dir)

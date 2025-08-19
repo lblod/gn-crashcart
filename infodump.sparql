@@ -1,0 +1,37 @@
+PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
+PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+
+SELECT ?dir ?p (COUNT(DISTINCT ?z) AS ?instanceCount) (GROUP_CONCAT(DISTINCT ?typeWithCount; SEPARATOR = ";") AS ?types)
+WHERE {
+  VALUES ?targetType { besluit:Zitting }
+  ?z a ?targetType .
+  {
+    ?z ?p ?o .
+  }
+  UNION
+  {
+    ?o ?p ?z .
+  }
+  {
+    SELECT DISTINCT ?dir ?p (CONCAT(?type, " (", COUNT(DISTINCT ?o), ")") AS ?typeWithCount)
+    WHERE {
+      ?z a ?targetType .
+      {
+        VALUES ?dir { "out" }
+        ?z ?p ?o .
+      }
+      UNION
+      {
+        VALUES ?dir { "in" }
+        ?o ?p ?z .
+      }
+      OPTIONAL {
+        ?o a ?type .
+      }
+    }
+    GROUP BY ?dir ?p ?type
+    ORDER BY ASC(?dir)
+  }
+}
+GROUP BY ?dir ?p
+ORDER BY ASC(?dir)

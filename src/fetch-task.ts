@@ -69,10 +69,11 @@ export async function fetchTaskifiedEndpoint(
   url: string,
   fetchOptions: RequestInit
 ): Promise<string> {
+  console.log('fetching taskified ep', url, JSON.stringify(fetchOptions));
   const res = await fetch(url, fetchOptions);
   if (res.ok) {
     const json = await res.json();
-    console.log('json task data', json.data)
+    console.log('json task data', json.data);
     return json.data.id;
   } else {
     throw new Error(await res.text());
