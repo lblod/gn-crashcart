@@ -35,7 +35,7 @@ interface Triangle extends BaseShape {
 const triangle = (w: number): Triangle => ({
   kind: 'triangle',
   shapeTypeUri:
-    'http://lblod.data.gift/concept-schemes/1cddd186-6018-4d12-84d6-f1a5d01affde',
+    'http://register.mobiliteit.vlaanderen.be/concepts/1cddd186-6018-4d12-84d6-f1a5d01affde',
   dimensions: [width(w)],
 });
 
@@ -45,7 +45,7 @@ interface InvTriangle extends BaseShape {
 const invTriangle = (w: number): InvTriangle => ({
   kind: 'invTriangle',
   shapeTypeUri:
-    'http://data.lblod.info/concept-schemes/10b19729-8b4a-4ea5-8470-bc34fc204791',
+    'http://register.mobiliteit.vlaanderen.be/concepts/10b19729-8b4a-4ea5-8470-bc34fc204791',
   dimensions: [width(w)],
 });
 
@@ -55,7 +55,7 @@ interface Diamond extends BaseShape {
 const diamond = (w: number): Diamond => ({
   kind: 'diamond',
   shapeTypeUri:
-    'http://data.lblod.info/concept-schemes/322852b4-ec7b-4ca2-b267-4fcc263fa0d7',
+    'http://register.mobiliteit.vlaanderen.be/concepts/322852b4-ec7b-4ca2-b267-4fcc263fa0d7',
   dimensions: [width(w)],
 });
 
@@ -65,7 +65,7 @@ interface Octagon extends BaseShape {
 const octagon = (w: number): Octagon => ({
   kind: 'octagon',
   shapeTypeUri:
-    'http://data.lblod.info/concept-schemes/0e0897d1-5c74-47ae-9868-adecbde6f2f3',
+    'http://register.mobiliteit.vlaanderen.be/concepts/0e0897d1-5c74-47ae-9868-adecbde6f2f3',
   dimensions: [width(w)],
 });
 
@@ -75,7 +75,7 @@ interface Circle extends BaseShape {
 const circle = (r: number): Circle => ({
   kind: 'circle',
   shapeTypeUri:
-    'http://data.lblod.info/concept-schemes/2481e377-1a89-4e25-9c58-1b509e0f7d74',
+    'http://register.mobiliteit.vlaanderen.be/concepts/2481e377-1a89-4e25-9c58-1b509e0f7d74',
   dimensions: [radius(r)],
 });
 
@@ -85,7 +85,7 @@ interface Rectangle extends BaseShape {
 const rectangle = ([w, h]: DualDimension): Rectangle => ({
   kind: 'rectangle',
   shapeTypeUri:
-    'http://data.lblod.info/concept-schemes/a5a1b947-1c34-40df-8842-707de418adb8',
+    'http://register.mobiliteit.vlaanderen.be/concepts/a5a1b947-1c34-40df-8842-707de418adb8',
   dimensions: [width(w), height(h)],
 });
 interface Arrow extends BaseShape {
@@ -94,7 +94,7 @@ interface Arrow extends BaseShape {
 const arrow = ([w, h]: DualDimension): Arrow => ({
   kind: 'arrow',
   shapeTypeUri:
-    'http://data.lblod.info/concept-schemes/4f445b8f-98ce-4621-b671-009a1acb13a6',
+    'http://register.mobiliteit.vlaanderen.be/concepts/4f445b8f-98ce-4621-b671-009a1acb13a6',
   dimensions: [width(w), height(h)],
 });
 
