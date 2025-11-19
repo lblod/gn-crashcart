@@ -1,0 +1,17 @@
+PREFIX prov: <http://www.w3.org/ns/prov#>
+
+DELETE {
+  GRAPH ?g {
+    <http://data.lblod.info/versioned-notulen/4bff4930-666f-11f0-93f4-3f845b1c6379> prov:generated ?file .
+  }
+}
+INSERT {
+  GRAPH ?g {
+    <http://data.lblod.info/versioned-notulen/4bff4930-666f-11f0-93f4-3f845b1c6379> prov:generated <http://lblod.data.gift/files/4c075f80-666f-11f0-93f4-3f845b1c6379> .
+  }
+}
+WHERE {
+  GRAPH ?g {
+    <http://data.lblod.info/versioned-notulen/4bff4930-666f-11f0-93f4-3f845b1c6379> prov:generated ?file .
+  }
+}

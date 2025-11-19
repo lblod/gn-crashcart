@@ -11,3 +11,4 @@ cascadelog
 _sparql_tests
 republication-output
 tmp
+.log

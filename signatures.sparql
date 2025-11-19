@@ -1,0 +1,7 @@
+PREFIX ext: <http://mu.semte.ch/vocabularies/ext/>
+
+SELECT DISTINCT *
+WHERE {
+  ?versionedResource ext:debugTag "fix-signature" ;
+                     a ext:VersionedBesluitenLijst .
+}

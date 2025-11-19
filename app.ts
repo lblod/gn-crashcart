@@ -36,6 +36,11 @@ import {
   writeCascadingDeleteMigrationsForResource,
   writeCascadingMigrations,
 } from './src/write-cascading-delete-migrations';
+import {
+  calculateHash,
+  fixSignatures,
+  reconnectSignatures,
+} from './src/fix-signatures/fix-signatures';
 app.use(bodyParser.json());
 
 async function findSign(code: string): Promise<Result<string, ParseErr>> {
@@ -287,4 +292,20 @@ app.post('/republish/:meetingUuid', async function (req, res) {
     includeTreatmentsInNotulen
   );
   res.status(200).send('finished republishing in gn');
+});
+
+app.post('/reinsert-signatures', async function (req, res) {
+  await fixSignatures();
+  res.status(200).send('finished reinserting signatures');
+});
+app.post('/fix-signatures', async function (req, res) {
+  await reconnectSignatures();
+  res
+    .status(200)
+    .send('finished reconnecting and rehashing signatures of treatments');
+});
+app.post('/check-hash', async function (req, res) {
+  const uri = req.body.uri;
+  const result = await calculateHash(uri);
+  res.status(200).send(result ? 'hashes match' : 'hashes dont match');
 });
