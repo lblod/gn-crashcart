@@ -33,7 +33,7 @@ import { makeSignMigration } from './src/save-shapes';
 import { parseShape } from './src/shape-parser';
 import { Sign } from './src/sign';
 import {
-  writeCascadingDeleteMigrationsForResource,
+  writeCascadingMigrationsForResource,
   writeCascadingMigrations,
 } from './src/write-cascading-delete-migrations';
 import {
@@ -153,7 +153,7 @@ app.post('/clean-poison', async function (_req, res) {
 app.post('/cascade-zitting/:uuid', async function (req, res) {
   const uuid = req.params.uuid;
   const rootUri = await getUriForUuid(uuid);
-  await writeCascadingDeleteMigrationsForResource({
+  await writeCascadingMigrationsForResource({
     uuid,
     rootUri,
     rootConfig: publicationMeetingCascadeConfig,
@@ -165,7 +165,7 @@ app.post('/cascade-zitting/:uuid', async function (req, res) {
 app.post('/cascade-published-resource-gn/:uuid', async function (req, res) {
   const uuid = req.params.uuid;
   const rootUri = await getUriForUuid(uuid);
-  await writeCascadingDeleteMigrationsForResource({
+  await writeCascadingMigrationsForResource({
     uuid,
     rootUri,
     rootConfig: gnPublishedResource,

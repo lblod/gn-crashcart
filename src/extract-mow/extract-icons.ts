@@ -1,11 +1,11 @@
 import { query } from 'mu';
-import { writeCascadingDeleteMigrationsForResource } from '../write-cascading-delete-migrations';
+import { writeCascadingMigrationsForResource } from '../write-cascading-delete-migrations';
 import { allIconConfigs, icon } from './icon-cascade';
 
 export async function extractIcons() {
   const icons = await getAllIcons();
   for (const iconInstance of icons) {
-    await writeCascadingDeleteMigrationsForResource({
+    await writeCascadingMigrationsForResource({
       allConfigs: allIconConfigs,
       filenameInfix: 'Pictogram',
       rootConfig: icon()(undefined),

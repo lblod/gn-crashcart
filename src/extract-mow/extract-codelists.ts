@@ -1,11 +1,11 @@
 import { query } from 'mu';
-import { writeCascadingDeleteMigrationsForResource } from '../write-cascading-delete-migrations';
+import { writeCascadingMigrationsForResource } from '../write-cascading-delete-migrations';
 import { allCodelistConfigs, codelist } from './codelist-cascade';
 
 export async function extractCodelists() {
   const codelistsToExport = await getAllCodelistsNotInProd();
   for (const codelistEntry of codelistsToExport) {
-    await writeCascadingDeleteMigrationsForResource({
+    await writeCascadingMigrationsForResource({
       uuid: codelistEntry.uuid,
       rootUri: codelistEntry.uri,
       graphFilter: ['http://mu.semte.ch/graphs/mow/registry'],

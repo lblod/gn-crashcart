@@ -90,7 +90,7 @@ export async function writeCascadingMigrations({
     }
   }
 }
-export async function writeCascadingDeleteMigrationsForResource({
+export async function writeCascadingMigrationsForResource({
   uuid,
   rootUri,
   rootConfig,

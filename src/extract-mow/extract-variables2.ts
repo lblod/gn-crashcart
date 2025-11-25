@@ -1,12 +1,12 @@
 import { query } from 'mu';
-import { writeCascadingDeleteMigrationsForResource } from '../write-cascading-delete-migrations';
+import { writeCascadingMigrationsForResource } from '../write-cascading-delete-migrations';
 import { codelistValue, variable } from './sign-cascade';
 import { uriMap } from './uri-mapping';
 
 export async function extractVariables2() {
   const vars = await getAllVariables();
   for (const variableId of vars) {
-    writeCascadingDeleteMigrationsForResource({
+    writeCascadingMigrationsForResource({
       uuid: variableId.uuid,
       rootUri: variableId.uri,
       allConfigs: [variable, codelistValue].map((f) => f()(undefined)),

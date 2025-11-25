@@ -1,11 +1,11 @@
 import { query } from 'mu';
-import { writeCascadingDeleteMigrationsForResource } from '../write-cascading-delete-migrations';
+import { writeCascadingMigrationsForResource } from '../write-cascading-delete-migrations';
 import { dimension, tribontShape } from './sign-cascade';
 
 export async function extractShapes() {
   const shapes = await getAllShapes();
   for (const shape of shapes) {
-    writeCascadingDeleteMigrationsForResource({
+    writeCascadingMigrationsForResource({
       uuid: shape.uuid,
       rootUri: shape.uri,
       allConfigs: [tribontShape, dimension].map((f) => f()(undefined)),

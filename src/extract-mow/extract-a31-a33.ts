@@ -1,11 +1,11 @@
 import { query } from 'mu';
-import { writeCascadingDeleteMigrationsForResource } from '../write-cascading-delete-migrations';
+import { writeCascadingMigrationsForResource } from '../write-cascading-delete-migrations';
 import { allNewSignConfigs, roadsign } from './sign-cascade';
 
 export async function extractSigns() {
   const signs = await getSigns();
   for (const sign of signs) {
-    writeCascadingDeleteMigrationsForResource({
+    writeCascadingMigrationsForResource({
       uuid: sign.uuid,
       allConfigs: allNewSignConfigs,
       rootUri: sign.uri,

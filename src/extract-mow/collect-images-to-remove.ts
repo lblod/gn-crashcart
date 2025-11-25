@@ -1,11 +1,11 @@
 import { query } from 'mu';
-import { writeCascadingDeleteMigrationsForResource } from '../write-cascading-delete-migrations';
+import { writeCascadingMigrationsForResource } from '../write-cascading-delete-migrations';
 import { fileDataObject, image } from './icon-cascade';
 
 export async function collectImagesToRemove() {
   const imgIds = await findImagesToRemove();
   for (const imgId of imgIds) {
-    await writeCascadingDeleteMigrationsForResource({
+    await writeCascadingMigrationsForResource({
       uuid: imgId.uuid,
       rootUri: imgId.uri,
       rootConfig: image()(undefined),
