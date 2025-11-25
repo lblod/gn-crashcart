@@ -1,4 +1,4 @@
-export type PredString = `${Lowercase<string>}:${Lowercase<string>}${string}`;
+export type PredString = `${Lowercase<string>}${string}:${string}`;
 export type ResString = `${Lowercase<string>}:${Capitalize<string>}`;
 export interface BaseConstraint {
   pred?: PredString;

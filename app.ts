@@ -41,6 +41,21 @@ import {
   fixSignatures,
   reconnectSignatures,
 } from './src/fix-signatures/fix-signatures';
+import { extractIcons } from './src/extract-mow/extract-icons';
+import { extractCodelists } from './src/extract-mow/extract-codelists';
+import { extractNewSigns } from './src/extract-mow/extract-new-signs';
+import { extractShapes } from './src/extract-mow/extract-shapes';
+import { extractVariables } from './src/extract-mow/extract-variables';
+import { collectImagesToRemove } from './src/extract-mow/collect-images-to-remove';
+import { extractImages } from './src/extract-mow/extract-images';
+import { extractSubsignRelationships } from './src/extract-mow/extract-subsign-relationships';
+import { extractContainedSigns } from './src/extract-mow/extract-contained-sign-relationships';
+import { removeSigns } from './src/extract-mow/remove-a31-a33';
+import { extractSigns } from './src/extract-mow/extract-a31-a33';
+import { collectImagesToRemove2 } from './src/extract-mow/collect-images-to-remove2';
+import { extractImages2 } from './src/extract-mow/extract-images2';
+import { extractShapes2 } from './src/extract-mow/extract-shapes2';
+import { extractVariables2 } from './src/extract-mow/extract-variables2';
 app.use(bodyParser.json());
 
 async function findSign(code: string): Promise<Result<string, ParseErr>> {
@@ -308,4 +323,66 @@ app.post('/check-hash', async function (req, res) {
   const uri = req.body.uri;
   const result = await calculateHash(uri);
   res.status(200).send(result ? 'hashes match' : 'hashes dont match');
+});
+app.post('/extract-icons', async function (req, res) {
+  const result = await extractIcons();
+  res.status(200).send();
+});
+app.post('/extract-codelists', async function (req, res) {
+  const result = await extractCodelists();
+  res.status(200).send();
+});
+app.post('/extract-new-signs', async function (req, res) {
+  const result = await extractNewSigns();
+  res.status(200).send();
+});
+app.post('/extract-shapes', async function (req, res) {
+  const result = await extractShapes();
+  res.status(200).send();
+});
+app.post('/extract-variables', async function (req, res) {
+  const result = await extractVariables();
+  res.status(200).send();
+});
+app.post('/collect-images-to-delete', async function (req, res) {
+  const result = await collectImagesToRemove();
+  res.status(200).send();
+});
+app.post('/extract-images', async function (req, res) {
+  const result = await extractImages();
+  res.status(200).send();
+});
+
+app.post('/extract-subsigns', async function (req, res) {
+  const result = await extractSubsignRelationships();
+  res.status(200).send();
+});
+app.post('/extract-containedsigns', async function (req, res) {
+  const result = await extractContainedSigns();
+  res.status(200).send();
+});
+
+app.post('/remove-faulty-signs', async function (req, res) {
+  const result = await removeSigns();
+  res.status(200).send();
+});
+app.post('/extract-correct-signs', async function (req, res) {
+  const result = await extractSigns();
+  res.status(200).send();
+});
+
+app.post('/collect-images-to-delete2', async function (req, res) {
+  const result = await collectImagesToRemove2();
+  res.status(200).send();
+});
+
+app.post('/extract-images2', async function (req, res) {
+  const result = await extractImages2();
+  res.status(200).send();
+});
+
+app.post('/extract-vars-and-shapes2', async function (req, res) {
+  const result = await extractShapes2();
+  const result2 = await extractVariables2();
+  res.status(200).send();
 });

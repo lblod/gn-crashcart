@@ -1,0 +1,19 @@
+PREFIX mobiliteit: <https://data.vlaanderen.be/ns/mobiliteit#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+SELECT ?code ?uriQA ?uriProd 
+WHERE {
+  SERVICE <http://db.mow-qa.localhost/sparql> {
+    GRAPH <http://mu.semte.ch/graphs/mow/registry> {
+      ?uriQA a mobiliteit:Verkeersbordconcept ;
+             skos:prefLabel ?code .
+    }
+  }
+  SERVICE <http://db.mow-prod.localhost/sparql> {
+    GRAPH <http://mu.semte.ch/graphs/mow/registry> {
+      ?uriProd a mobiliteit:Verkeersbordconcept ;
+             skos:prefLabel ?code .
+    }
+  }
+  FILTER (?uriQA != ?uriProd)
+}

@@ -19,6 +19,8 @@ export interface CascadingDeleteOpts {
   opts: CascadeOpts;
   outputDir: string;
   deleteOrInsert?: 'DELETE' | 'INSERT';
+  graphFilter?: string[];
+  uriMap?: Map<string, string>;
   filenameGenerator: (
     result: Awaited<ReturnType<typeof collectQuads>>,
     index: number
@@ -31,6 +33,8 @@ export async function writeCascadingMigrations({
   allConfigs,
   outputDir,
   deleteOrInsert = 'DELETE',
+  graphFilter = [],
+  uriMap,
   filenameGenerator,
 }: CascadingDeleteOpts) {
   const { log, results } = await doCascade(
@@ -55,12 +59,27 @@ export async function writeCascadingMigrations({
           setOrPush(graphs, quad.graph.value, quad);
         }
         for (const [graph, quads] of graphs.entries()) {
-          queries.push(`
+          if (graphFilter.length === 0 || graphFilter.includes(graph)) {
+            if (uriMap) {
+              let queryStr = `
+	${deleteOrInsert} DATA {
+	  GRAPH ${sparqlEscapeUri(graph)} {
+	    ${quadsToTripleString(quads)}
+	  }
+	}`;
+              for (const [key, value] of uriMap.entries()) {
+                queryStr = queryStr.replaceAll(key, value);
+              }
+              queries.push(queryStr);
+            } else {
+              queries.push(`
 	${deleteOrInsert} DATA {
 	  GRAPH ${sparqlEscapeUri(graph)} {
 	    ${quadsToTripleString(quads)}
 	  }
 	}`);
+            }
+          }
         }
       }
 
@@ -77,17 +96,22 @@ export async function writeCascadingDeleteMigrationsForResource({
   rootConfig,
   allConfigs,
   filenameInfix,
+  deleteOrInsert,
+  graphFilter,
+  uriMap,
 }: Omit<CascadingDeleteOpts, 'filenameGenerator' | 'opts' | 'outputDir'> & {
   filenameInfix: string;
   uuid: string;
 }) {
   const timestamp = makeMigrationTimestamp(new Date());
-  const migrationPath = `/app/migrations/${timestamp}-delete-${filenameInfix}-${uuid}`;
+  const migrationPath = `/app/migrations/${timestamp}-${deleteOrInsert?.toLowerCase()}-${filenameInfix}-${uuid}`;
 
   writeCascadingMigrations({
+    graphFilter,
+    deleteOrInsert,
     allConfigs,
     filenameGenerator: (result, index) =>
-      `${timestamp}-delete-${filenameInfix}-${uuid}-${result.config.name}-${result.uuid ?? `no-uuid-${index}`}.sparql`,
+      `${timestamp}-${deleteOrInsert?.toLowerCase()}-${filenameInfix}-${uuid}-${result.config.name}-${result.uuid ?? `no-uuid-${index}`}.sparql`,
     opts: {
       checkForRelationshipsWithoutType: true,
       logEmptyRelationships: false,
@@ -95,5 +119,6 @@ export async function writeCascadingDeleteMigrationsForResource({
     outputDir: migrationPath,
     rootUri,
     rootConfig,
+    uriMap,
   });
 }

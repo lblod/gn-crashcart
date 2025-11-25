@@ -1,0 +1,25 @@
+PREFIX mobiliteit: <https://data.vlaanderen.be/ns/mobiliteit#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+SELECT DISTINCT ?codeQa ?subCodeProd
+WHERE {
+  SERVICE <http://db.mow-qa.localhost/sparql> {
+    GRAPH <http://mu.semte.ch/graphs/mow/registry> {
+      ?sign a mobiliteit:Verkeersbordconcept ;
+            skos:prefLabel ?codeQa .
+      FILTER (?codeQa NOT IN ("A31", "A33", "E9a-GVIIb", "E9a-GVIId", "E9j", "F113", "GIII", "GIX", "GXII", "M21", "M22", "M23", "M24"))
+      FILTER NOT EXISTS {
+        ?sign mobiliteit:heeftMogelijkOnderbord ?subsignProd .
+      }
+    }
+  }
+  SERVICE <http://db.mow-prod.localhost/sparql> {
+    GRAPH <http://mu.semte.ch/graphs/mow/registry> {
+      ?sign a mobiliteit:Verkeersbordconcept ;
+            mobiliteit:heeftMogelijkOnderbord ?subsignProd ;
+            skos:prefLabel ?codeProd .
+      ?subsignProd skos:prefLabel ?subCodeProd .
+      FILTER (?codeProd NOT IN ("A31", "A33", "E9a-GVIIb", "E9a-GVIId", "E9j", "F113", "GIII", "GIX", "GXII", "M21", "M22", "M23", "M24"))
+    }
+  }
+}

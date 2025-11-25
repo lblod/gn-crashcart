@@ -1,0 +1,20 @@
+PREFIX mobiliteit: <https://data.vlaanderen.be/ns/mobiliteit#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+PREFIX fakemobi: <http://data.lblod.info/vocabularies/mobiliteit/>
+PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+
+SELECT ?uri
+WHERE {
+  SERVICE <http://db.mow-qa.localhost/sparql> {
+    GRAPH <http://mu.semte.ch/graphs/mow/registry> {
+      ?uri a fakemobi:Codelist ;
+           mu:uuid ?uuid .
+    }
+  }
+  SERVICE <http://db.mow-prod.localhost/sparql> {
+    GRAPH <http://mu.semte.ch/graphs/mow/registry> {
+      ?uri a fakemobi:Codelist ;
+           mu:uuid ?uuid .
+    }
+  }
+}

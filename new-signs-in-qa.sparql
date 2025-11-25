@@ -1,0 +1,33 @@
+PREFIX mobiliteit: <https://data.vlaanderen.be/ns/mobiliteit#>
+PREFIX skos: <http://www.w3.org/2004/02/skos/core#>
+
+SELECT ?code ?uriQA 
+WHERE {
+  SERVICE <http://db.mow-qa.localhost/sparql> {
+    GRAPH <http://mu.semte.ch/graphs/mow/registry> {
+      ?uriQA a mobiliteit:Verkeersbordconcept ;
+             skos:prefLabel ?code .
+    }
+  }
+  FILTER NOT EXISTS {
+  SERVICE <http://db.mow-prod.localhost/sparql> {
+    GRAPH <http://mu.semte.ch/graphs/mow/registry> {
+      ?uriQA a mobiliteit:Verkeersbordconcept .
+    }
+  }
+  }
+  FILTER (?code NOT IN ( "A31",
+"A33",
+"E9a-GVIIb",
+"E9a-GVIId",
+"E9j",
+"F113",
+"GIII",
+"GIX",
+"GXII",
+"M21",
+"M22",
+"M23",
+"M24"
+  ))
+}

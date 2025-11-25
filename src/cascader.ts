@@ -15,7 +15,6 @@ export interface CascadeOpts {
   logEmptyRelationships: boolean;
   checkForRelationshipsWithoutType: boolean;
 }
-
 const prefixes = `
 PREFIX besluit: <http://data.vlaanderen.be/ns/besluit#>
 PREFIX dct: <http://purl.org/dc/terms/>
@@ -28,6 +27,13 @@ PREFIX nie: <http://www.semanticdesktop.org/ontologies/2007/01/19/nie#>
 PREFIX eli: <http://data.europa.eu/eli/ontology#>
 PREFIX task: <http://redpencil.data.gift/vocabularies/tasks/>
 PREFIX nuao: <http://www.semanticdesktop.org/ontologies/2010/01/25/nuao#>
+PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+PREFIX mobiliteit: <https://data.vlaanderen.be/ns/mobiliteit#>
+PREFIX fakemobi: <http://data.lblod.info/vocabularies/mobiliteit/>
+PREFIX tribont: <https://w3id.org/tribont/core#>
+PREFIX w3ic: <https://w3id.org/isCharacterisedBy#>
+PREFIX variables: <http://lblod.data.gift/vocabularies/variables/>
+PREFIX cidoc: <http://www.cidoc-crm.org/cidoc-crm/>
 `;
 
 async function cascade<R>(

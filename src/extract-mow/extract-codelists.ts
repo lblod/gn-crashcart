@@ -1,0 +1,60 @@
+import { query } from 'mu';
+import { writeCascadingDeleteMigrationsForResource } from '../write-cascading-delete-migrations';
+import { allCodelistConfigs, codelist } from './codelist-cascade';
+
+export async function extractCodelists() {
+  const codelistsToExport = await getAllCodelistsNotInProd();
+  for (const codelistEntry of codelistsToExport) {
+    await writeCascadingDeleteMigrationsForResource({
+      uuid: codelistEntry.uuid,
+      rootUri: codelistEntry.uri,
+      graphFilter: ['http://mu.semte.ch/graphs/mow/registry'],
+      allConfigs: allCodelistConfigs,
+      rootConfig: codelist()(undefined),
+      filenameInfix: 'Codelist',
+      deleteOrInsert: 'INSERT',
+    });
+  }
+}
+/**
+ * Get info about new codelists
+ */
+export async function getAllCodelistsNotInProd() {
+  const queryStr = `
+  PREFIX fakemobi: <http://data.lblod.info/vocabularies/mobiliteit/>
+  PREFIX mu: <http://mu.semte.ch/vocabularies/core/>
+  SELECT ?uri ?uuid WHERE {
+    ?uri a fakemobi:Codelist;
+         mu:uuid ?uuid.
+    FILTER(?uri NOT IN ( 
+      <http://lblod.data.gift/concept-schemes/02ce247f-566c-4b8c-afd7-67a06c94b9db>,
+      <http://lblod.data.gift/concept-schemes/0d475a68-f824-4949-adf3-435862b7eb9e>,
+      <http://lblod.data.gift/concept-schemes/1a6fa842-0b50-4d41-9922-934cef57ed26>,
+      <http://lblod.data.gift/concept-schemes/61ADC400BF5C750009000001>,
+      <http://lblod.data.gift/concept-schemes/61ADC7CDBF5C750009000004>,
+      <http://lblod.data.gift/concept-schemes/61ADCA2ABF5C75000900000D>,
+      <http://lblod.data.gift/concept-schemes/61AE2B3BBF5C750009000040>,
+      <http://lblod.data.gift/concept-schemes/61AE3534BF5C750009000050>,
+      <http://lblod.data.gift/concept-schemes/61B1FF77BF5C750009000253>,
+      <http://lblod.data.gift/concept-schemes/61B206FABF5C750009000257>,
+      <http://lblod.data.gift/concept-schemes/61B20FDBBF5C75000900025B>,
+      <http://lblod.data.gift/concept-schemes/61C054CEE3249100080000B9>,
+      <http://lblod.data.gift/concept-schemes/62331E6900730AE7B99DF7EF>,
+      <http://lblod.data.gift/concept-schemes/62331FDD00730AE7B99DF7F2>,
+      <http://lblod.data.gift/concept-schemes/6621be2e-98c6-4b7c-bc99-bb8b4cca879f>,
+      <http://lblod.data.gift/concept-schemes/82fb6464-525d-47ec-82bf-2e9b9892b1d9>,
+      <http://lblod.data.gift/concept-schemes/98ce0acb-a92d-4641-860e-d7f581810686>,
+      <http://lblod.data.gift/concept-schemes/bc3b05d0-9688-4074-8eae-f142c5d2ddda>,
+      <http://lblod.data.gift/concept-schemes/cdf4766b-8348-4e2b-a798-44e38d36a34f>,
+      <http://lblod.data.gift/concept-schemes/cfc95f6e-9ed6-49ce-afd2-d9aaba9a9282>,
+      <http://lblod.data.gift/concept-schemes/cfde5b00-332a-4e0f-8791-413a40cec703>,
+      <http://lblod.data.gift/concept-schemes/f281a7b8-e38d-40cf-bd54-17447e01c1ac>
+     )
+    )
+  }`;
+  const result = await query<{ uri: string; uuid: string }>(queryStr);
+  return result.results.bindings.map((b) => ({
+    uri: b.uri.value,
+    uuid: b.uuid.value,
+  }));
+}
